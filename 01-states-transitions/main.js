@@ -10,7 +10,26 @@ import { inspect } from '@xstate/inspect';
 //   url: 'https://stately.ai/viz?inspect',
 // });
 
-const playerMachine = createMachine({});
+const playerMachine = createMachine({
+  initial: 'loading',
+  states: {
+    loading: {
+      on: {
+        LOADED: 'playing',
+      },
+    },
+    playing: {
+      on: {
+        PAUSE: 'paused',
+      },
+    },
+    paused: {
+      on: {
+        PLAY: 'playing',
+      },
+    },
+  },
+});
 
 const service = interpret(playerMachine, { devTools: true }).start();
 
@@ -28,4 +47,6 @@ service.subscribe((state) => {
   elements.elPauseButton.hidden = !state.can({ type: 'PAUSE' });
 });
 
-service.send({ type: 'LOADED' });
+setTimeout(() => {
+  service.send({ type: 'LOADED' });
+}, 2000);
