@@ -1,4 +1,3 @@
-// @ts-check
 import '../style.css';
 import { createMachine, assign, interpret, send } from 'xstate';
 
@@ -23,76 +22,82 @@ const playerMachine = createMachine({
   //   player: 'loading',
   //   volume: 'muted'
   // }
-  initial: 'loading',
+  type: 'parallel',
   states: {
-    // These states should be in a parent 'player' region
-    loading: {
-      id: 'loading',
-      tags: ['loading'],
-      on: {
-        LOADED: {
-          actions: 'assignSongData',
-          target: 'ready',
-        },
-      },
-    },
-    ready: {
-      initial: 'playing',
+    player: {
+      initial: 'loading',
       states: {
-        paused: {
+        loading: {
+          id: 'loading',
+          tags: ['loading'],
           on: {
-            PLAY: { target: 'playing' },
+            LOADED: {
+              actions: 'assignSongData',
+              target: 'ready',
+            },
           },
         },
-        playing: {
-          entry: 'playAudio',
-          exit: 'pauseAudio',
-          on: {
-            PAUSE: { target: 'paused' },
-          },
-          always: {
-            cond: (ctx) => ctx.elapsed >= ctx.duration,
-            target: '#loading',
+        ready: {
+          initial: 'playing',
+          states: {
+            paused: {
+              on: {
+                PLAY: { target: 'playing' },
+              },
+            },
+            playing: {
+              entry: 'playAudio',
+              exit: 'pauseAudio',
+              on: {
+                PAUSE: { target: 'paused' },
+              },
+              always: {
+                cond: (ctx) => ctx.elapsed >= ctx.duration,
+                target: '#loading',
+              },
+            },
           },
         },
       },
-    },
-
-    // These states should be in a parent 'volume' region
-    unmuted: {
       on: {
-        'VOLUME.TOGGLE': 'muted',
+        SKIP: {
+          actions: 'skipSong',
+          target: '#loading',
+        },
+        LIKE: {
+          actions: 'likeSong',
+        },
+        UNLIKE: {
+          actions: 'unlikeSong',
+        },
+        DISLIKE: {
+          actions: ['dislikeSong', raise('SKIP')],
+        },
+        'AUDIO.TIME': {
+          actions: 'assignTime',
+        },
       },
     },
-    muted: {
-      on: {
-        'VOLUME.TOGGLE': 'unmuted',
+    volume: {
+      initial: 'unmuted',
+      states: {
+        unmuted: {
+          on: {
+            'VOLUME.TOGGLE': 'muted',
+          },
+        },
+        muted: {
+          on: {
+            'VOLUME.TOGGLE': 'unmuted',
+          },
+        },
       },
-    },
-  },
-  on: {
-    // These should belong to the 'player' region
-    SKIP: {
-      actions: 'skipSong',
-      target: '#loading',
-    },
-    LIKE: {
-      actions: 'likeSong',
-    },
-    UNLIKE: {
-      actions: 'unlikeSong',
-    },
-    DISLIKE: {
-      actions: ['dislikeSong', raise('SKIP')],
-    },
-    'AUDIO.TIME': {
-      actions: 'assignTime',
-    },
-
-    // This should belong to the 'volume' region
-    VOLUME: {
-      cond: 'volumeWithinRange',
-      actions: 'assignVolume',
+      on: {
+        VOLUME: {
+          cond: 'volumeWithinRange',
+          actions: 'assignVolume',
+        },
+      },
     },
   },
 }).withConfig({
