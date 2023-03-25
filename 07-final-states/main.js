@@ -1,4 +1,3 @@
-// @ts-check
 import '../style.css';
 import { createMachine, assign, interpret, send } from 'xstate';
 
@@ -50,10 +49,13 @@ const playerMachine = createMachine({
             cond: (ctx) => ctx.elapsed >= ctx.duration,
             // Instead of going to '#loading', this should go
             // to a sibling 'finished' state
-            target: '#loading',
+            target: 'finished',
           },
         },
         // Add a 'finished' final state here
+        finished: {
+          type: 'final',
+        },
       },
       onDone: {
         target: '.loading',
