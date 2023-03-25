@@ -1,4 +1,3 @@
-// @ts-check
 import '../style.css';
 import { createMachine, assign, interpret, send } from 'xstate';
 import elements from '../utils/elements';
@@ -10,6 +9,12 @@ const playerMachine = createMachine({
   context: {
     // Add initial context here for:
     // title, artist, duration, elapsed, likeStatus, volume
+    title: '',
+    artist: '',
+    duration: 0,
+    elapsed: 0,
+    likeStatus: 'unliked',
+    volume: 1,
   },
   states: {
     loading: {
@@ -68,15 +73,23 @@ const playerMachine = createMachine({
       //   }
       // }
       // Also, reset the `elapsed` and `likeStatus` values.
+      title: (context, event) => event.data.title,
+      artist: (context, event) => event.data.artist,
+      duration: (context, event) => event.data.duration,
+      elapsed: 0,
+      likeStatus: 'unliked',
     }),
     likeSong: assign({
       // Assign the `likeStatus` to "liked"
+      likeStatus: 'liked',
     }),
     unlikeSong: assign({
       // Assign the `likeStatus` to 'unliked',
+      likeStatus: 'unliked',
     }),
     dislikeSong: assign({
       // Assign the `likeStatus` to 'disliked',
+      likeStatus: 'disliked',
     }),
     assignVolume: assign({
       // Assign the `volume` to the `level` from the event.
@@ -85,6 +98,7 @@ const playerMachine = createMachine({
       //   type: 'VOLUME',
       //   level: 5
       // }
+      volume: (context, event) => event.level,
     }),
     assignTime: assign({
       // Assign the `elapsed` value to the `currentTime` from the event.
@@ -93,6 +107,7 @@ const playerMachine = createMachine({
       //   type: 'AUDIO.TIME',
       //   currentTime: 10
       // }
+      elapsed: (context, event) => event.currentTime,
     }),
     skipSong: () => {
       console.log('Skipping song');
@@ -151,8 +166,8 @@ service.subscribe((state) => {
 service.send({
   type: 'LOADED',
   data: {
-    title: 'Some song title',
-    artist: 'Some song artist',
-    duration: 100,
+    title: 'Hotel California',
+    artist: 'Eagles',
+    duration: 326,
   },
 });

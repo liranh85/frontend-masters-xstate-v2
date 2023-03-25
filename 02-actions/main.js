@@ -1,4 +1,3 @@
-// @ts-check
 import '../style.css';
 import { createMachine, assign, interpret, send } from 'xstate';
 import { raise } from 'xstate/lib/actions';
