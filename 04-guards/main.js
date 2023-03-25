@@ -1,4 +1,3 @@
-// @ts-check
 import '../style.css';
 import { createMachine, assign, interpret } from 'xstate';
 import { raise } from 'xstate/lib/actions';
@@ -38,6 +37,10 @@ const playerMachine = createMachine({
       },
       // Add an eventless transition here that always goes to 'paused'
       // when `elapsed` value is >= the `duration` value
+      always: {
+        cond: (ctx) => ctx.elapsed >= ctx.duration,
+        target: 'paused',
+      },
     },
   },
   on: {
@@ -58,10 +61,19 @@ const playerMachine = createMachine({
       // Add two possible transitions here:
       // One that raises UNLIKE if the `likeStatus` is 'liked',
       // and one that raises LIKE if it's 'unliked'.
+      {
+        cond: (context) => context.likeStatus === 'unliked',
+        actions: raise('LIKE'),
+      },
+      {
+        cond: (context) => context.likeStatus === 'liked',
+        actions: raise('UNLIKE'),
+      },
     ],
     VOLUME: {
       // Make sure the volume can only be assigned if the level is
       // within range (between 0 and 10)
+      cond: (context, event) => event.level >= 0 && event.level <= 10,
       actions: 'assignVolume',
     },
     'AUDIO.TIME': {
